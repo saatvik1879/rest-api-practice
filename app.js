@@ -9,6 +9,8 @@ const orderRoutes = require('./api/routes/orders');
 
 mongoose.connect('mongodb+srv://saatvik1879:'+process.env.MONGO_ATLAS_PW+'@cluster0.erq9jye.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 
+mongoose.Promise = global.Promise;
+
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());

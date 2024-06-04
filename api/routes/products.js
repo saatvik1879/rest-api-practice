@@ -6,11 +6,25 @@ const Product = require('../models/products');
 
 router.get('/',(req,res,next) => {
     Product.find()
+    .select('_id name price')
     .exec()
     .then(doc=>{
-        console.log(doc)
+        const response = {
+            count:doc.length,
+            products:doc.map(dc=>{
+                return {
+                    name:dc.name,
+                    price:dc.price,
+                    id:dc._id,
+                    request:{
+                        type:'GET',
+                        url:'http://localhost:5001/products/'+dc._id
+                    }
+                }
+            })
+        };
         if(doc){
-            res.status(200).json(doc);
+            res.status(200).json(response);
         }else{
             res.status(404).json({message: "no entries found"});
         }
@@ -33,7 +47,15 @@ router.post('/',(req,res,next) => {
         console.log(result);
         res.status(200).json({
             messege : 'handling POST requests',
-            createdProduct: product
+            createdProduct: {
+                name:result.name,
+                price:result.price,
+                _id:result._id,
+                request:{
+                    type:'GET',
+                    url:"http://localhost:5001/products/"+result._id
+                }
+            }
         })
     })
     .catch(error =>{
@@ -48,6 +70,7 @@ router.post('/',(req,res,next) => {
 router.get('/:productId',(req,res,next)=>{
     const id = req.params.productId;
     Product.findById(id)
+    .select('name price _id')
     .exec()
     .then(doc =>{
         console.log("From database",doc);
