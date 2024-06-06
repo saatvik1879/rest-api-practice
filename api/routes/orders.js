@@ -6,7 +6,10 @@ const Order = require('../models/orders');
 
 
 router.get('/',(req,res,next)=>{
-    Order.find().exec()
+    Order.find()
+    .select('product _id quantity')
+    .populate('product','name')
+    .exec()
     .then(result=>{
         if(result!=null){
             const lst = {
@@ -14,7 +17,7 @@ router.get('/',(req,res,next)=>{
                 orders:result.map(order=>{
                     return {
                         orderID:order._id,
-                        productID:order.product,
+                        product:order.product,
                         quantity:order.quantity,
                         request:{
                             type:'GET',
@@ -68,7 +71,9 @@ router.post('/:productId',(req,res,next)=>{
 });
 
 router.get('/:orderID',(req,res,next)=>{
-    Order.findOne({_id:req.params.orderID}).exec()
+    Order.findOne({_id:req.params.orderID})
+    .populate('product')
+    .exec()
     .then(result=>{
         if(result){
             console.log(result);
