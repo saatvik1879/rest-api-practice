@@ -1,76 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const userauth = require('../middleware/user-auth');
 
 const Order = require('../models/orders');
 
+const orderControlls = require('../controllers/orders');
 
-router.get('/',(req,res,next)=>{
-    Order.find()
-    .select('product _id quantity')
-    .populate('product','name')
-    .exec()
-    .then(result=>{
-        if(result!=null){
-            const lst = {
-                ordersCount:result.length,
-                orders:result.map(order=>{
-                    return {
-                        orderID:order._id,
-                        product:order.product,
-                        quantity:order.quantity,
-                        request:{
-                            type:'GET',
-                            url:'http://localhost:5001/orders/'+order._id
-                        }
-                    }
-                })
-            }
-            res.status(200).json(lst);
-        }else{
-            res.status(404).json({
-                messege:"no orders"
-            });
-        }
-        
-    })
-    .catch(err =>{
-        res.status(500).json({
-            error:err
-        })
-    })
-});
+router.get('/',userauth,orderControlls.orders_get_all);
 
-router.post('/:productId',(req,res,next)=>{
-    const order = new Order({
-        _id: new mongoose.Types.ObjectId(),
-        product: req.params.productId,
-        quantity: req.body.quantity
-    });
-    order.save()
-    .then(result =>{
-        
-            console.log(result);
-            res.status(201).json({
-                createdOrder: {
-                    order_id:result._id,
-                    productId:result.product,
-                    quantity:result.quantity,
-                    request:{
-                        type:'GET',
-                        url:'http://localhost:5001/orders/'+result._id
-                    }
-                }
-            });
-    }).catch(err =>{
-        console.log(err);
-        res.status(500).json({
-            error:err
-        });
-    });
-});
+router.post('/:productId',userauth,orderControlls.create_order);
 
-router.get('/:orderID',(req,res,next)=>{
+router.get('/:orderID',userauth,(req,res,next)=>{
     Order.findOne({_id:req.params.orderID})
     .populate('product')
     .exec()
@@ -101,7 +42,7 @@ router.get('/:orderID',(req,res,next)=>{
     });
 });
 
-router.delete('/:orderID',(req,res,next)=>{
+router.delete('/:orderID',userauth,(req,res,next)=>{
     Order.findOneAndDelete({_id:req.params.orderID}).exec()
     .then(result=>{
         console.log(result);
